@@ -1,0 +1,249 @@
+FORMAT: 1A
+HOST: https://frozen-scrubland-43678.herokuapp.com
+
+# Resang Authentication API
+Welcome to the Resang API, soon to be extended to the all the application API!
+
+# Group Authentication
+
+## GET /
+
++ Response 200 (text/plain)
+
+        Welcome to Resang!
+
++ Response 404 (text/plain)
+
+        404 Page Not Found!
+
+
+## GET /users
+
++ Response 200 (application/json)
+
+        [users]
+
++ Response 404 (text/plain)
+
+        404 Page Not Found!
+
+
+## POST /auth/register
+
++ Parameters
+    + userName: `hp` (string, required) - The user name of a Resang user
+    + passWord: `resang` (string, required) - The password of a Resang user
+
++ Request Register New User (application/json)
+
+        { "userName" : "", "passWord" : "" }
+
+
++ Response 200 (application/json)
+
+        {
+          success: true,
+          message: 'Enjoy your token!',
+          data: {token: token, content: "helloworld"}
+        }
+
++ Response 404 (application/json)
+
+        {
+          success: false,
+          message: 'User already exists!',
+          data: {token: "No token authorized!", content: "helloworld"}
+        }
+
+
+## POST /auth/login
+
++ Parameters
+      + userName: `hp` (string, required) - The user name of a Resang user
+      + passWord: `resang` (string, required) - The password of a Resang user
+
++ Request Authenticate And Login User (application/json)
+
+        { "userName" : "", "passWord" : "" }
+
+
++ Response 200 (application/json)
+
+        {
+          success: true,
+          message: 'Enjoy your token!',
+          data: {token: token, content: "helloworld"}
+        }
+
++ Response 404 (application/json)
+
+        {
+          success: false,
+          message: 'Authentication failed. User not found.'
+        }
+
++ Response 403 (application/json)
+
+        {
+          success: false,
+          message: 'Authentication failed. Wrong password.'
+        }
+
+## GET /api
+
++ Request
+
+    + Headers
+
+            Authorization: YOUR_TOKEN_HERE
+
++ Response 200 (application/json)
+
+          { message: 'Welcome to the RESANG API!' }
+
+## GET /api/users
+
++ Request
+
+    + Headers
+
+            Authorization: YOUR_TOKEN_HERE
+
++ Response 200 (application/json)
+
+          [users]
+
+## Messages [/messages]
+
+### POST
+Create and Save a Message
+
++ Request
+
+    + Body
+
+            { "userName" : "", "message" : "" }
+
++ Response 200 (application/json)
+
+        {
+          success: true,
+          message: 'Message saved successfully!'
+        }
+
+### GET
+Retrieve All Messages
+
++ Response 200
+
+        [
+            {
+            "_id": "58b62c798e13a617f4d25fb1",
+            "userName": "heranp",
+            "message": "Hello world!",
+            "__v": 0,
+            "timestamp": "2017-03-01T02:05:45.861Z"
+            },
+            {
+            "_id": "58b62caf8e13a617f4d25fb2",
+            "userName": "kyle",
+            "message": "Hey! My name is Kyle!",
+            "__v": 0,
+            "timestamp": "2017-03-01T02:06:39.526Z"
+            },
+            {
+            "_id": "58b62cbd8e13a617f4d25fb3",
+            "userName": "Tej",
+            "message": "Yo! Tej in the house!",
+            "__v": 0,
+            "timestamp": "2017-03-01T02:06:53.518Z"
+            },
+            {
+            "_id": "58b62cce8e13a617f4d25fb4",
+            "userName": "Paul",
+            "message": "Paul Chun will destroy you at Computer Engineering!",
+            "__v": 0,
+            "timestamp": "2017-03-01T02:07:10.719Z"
+            }
+        ]
+
+## Images [/images]
+
+### POST
+Upload and Save an Image
+
++ Request
+
+    + Body
+
+            { "file" : "" }
+
++ Response 200 (application/json)
+
+        {
+          success: true,
+          message: 'Image Uploaded Successfully!'
+        }
+
+### GET
+Retrieve all the images.
+
++ Response 200
+
+                [
+                        {
+                        "_id": "58b6336c3e0ed9354c9a1bea",
+                        "__v": 0,
+                        "timestamp": "2017-03-01T02:35:24.966Z"
+                        },
+                        {
+                        "_id": "58b633aed582791e8056f3a8",
+                        "__v": 0,
+                        "timestamp": "2017-03-01T02:36:30.090Z"
+                        },
+                        {
+                        "_id": "58b634da882b052568a29abc",
+                        "__v": 0,
+                        "timestamp": "2017-03-01T02:41:30.132Z"
+                        },
+                        {
+                        "_id": "58b634f50200ad34cc3d2907",
+                        "__v": 0,
+                        "timestamp": "2017-03-01T02:41:57.399Z"
+                        },
+                        {
+                        "_id": "58b63550fffe1e32500b8a48",
+                        "__v": 0,
+                        "timestamp": "2017-03-01T02:43:28.563Z"
+                        },
+                        {
+                        "_id": "58b638989216e02e4c3207e1",
+                        "__v": 0,
+                        "timestamp": "2017-03-01T02:57:28.177Z"
+                        },
+                        {
+                        "_id": "58b638aab6f63f096cf6b755",
+                        "__v": 0,
+                        "timestamp": "2017-03-01T02:57:46.751Z"
+                        },
+                        {
+                        "_id": "58b6394e45d6811f289c91b3",
+                        "__v": 0,
+                        "timestamp": "2017-03-01T03:00:30.611Z"
+                        },
+                        {
+                        "_id": "58b639714bee86280838e7e2",
+                        "__v": 0,
+                        "timestamp": "2017-03-01T03:01:05.434Z"
+                        },
+                        {
+                        "_id": "58b6399fda15270ae86b950b",
+                        "__v": 0,
+                        "timestamp": "2017-03-01T03:01:51.408Z"
+                        },
+                        {
+                        "_id": "58b639e9fb546a13b8817b5d",
+                        "__v": 0,
+                        "timestamp": "2017-03-01T03:03:05.399Z"
+                        }
+                ]
