@@ -29,12 +29,16 @@ build/Release
 # Dependency directories
 node_modules
 jspm_packages
-./chatapp/node_modules
-uploads
-/chatapp/node_modules
 
 # Optional npm cache directory
 .npm
 
 # Optional REPL history
 .node_repl_history
+
+# Uploads
+uploads
+
+# Chat App Node Modules
+*/chatapp/node_modules
+*/chatapp_backend/node_modules

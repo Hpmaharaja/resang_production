@@ -15,11 +15,18 @@ var fs = require('fs'),
     url = require('url');
 var imageDir = 'C:/resang/resang_users/uploads/';
 
+// CHAT APP STUFF
+let chat_app = require('express')();
+let http = require('http').createServer(chat_app);
+var io = require( "socket.io" )( http );
+http.listen(5001, "127.0.0.1");
+
 var jwt    = require('jsonwebtoken'); // used to create, sign, and verify tokens
 var config = require('./config'); // get our config file
 var User   = require('./models/user'); // get our mongoose model
 var Messages = require('./models/messages');
 var Images = require('./models/images');
+var Clusters = require('./models/clusters');
 
 // =================================
 // CONFIGURATION
@@ -47,7 +54,32 @@ app.set('port', (process.env.PORT || 5000));
 
 app.get('/', function(request, response) {
   response.status(200);
-  response.send('<h1>Welcome to RESANG!</h1>');
+  response.send('<h1>Welcome to resNG!</h1>');
+});
+
+// CHATAPP SOCKETS -----------------------------------------------------
+io.on('connection', function (socket) {
+  var username = socket.handshake.query.username;
+  console.log(username + ' connected');
+
+  socket.on('client:message', function (data) {
+    console.log(data.username + ': ' + data.message);
+    var new_message = new Messages({
+      userName: data.username,
+      message: data.message
+    });
+    new_message.save(function(err) {
+      if (err) throw err;
+      console.log('Message saved in Database!');
+    });
+
+    // message received from client, now broadcast it to everyone else
+    socket.broadcast.emit('server:message', data);
+  });
+
+  socket.on('disconnect', function () {
+    console.log(username + ' disconnected');
+  });
 });
 
 // MESSAGES ------------------------------------------------------------
@@ -78,14 +110,17 @@ app.get('/messages', function(req,res) {
 
 // IMAGES ------------------------------------------------------------
 
-// IMAGE STORAGE
+// IMAGE STORAGE FUNCTIONS ====
 var storage = multer.diskStorage({ //multers disk storage settings
         destination: function (req, file, cb) {
             cb(null, 'uploads/');
         },
         filename: function (req, file, cb) {
-            //var datetimestamp = Date.now();
-            cb(null, file.fieldname + '-' + datetimestamp + '.' + file.originalname.split('.')[file.originalname.split('.').length -1]);
+            // var datetimestamp = Date.now();
+            console.log(file);
+            console.log(req.body);
+            //cb(null, datetimestamp + '_' + file.originalname + '_' + req.body.userName + '.jpg');
+            cb(null, req.body.fileName);
             //cb(null, String(req.body.fileName));
         }
 });
@@ -94,38 +129,71 @@ var upload = multer({ //multer settings
                     storage: storage
                 }).single('file');
 
+//get the list of jpg files in the image dir
+function getImages(imageDir, callback) {
+    var fileType = '.jpg',
+        files = [], i;
+    fs.readdir(imageDir, function (err, list) {
+        for(i=0; i<list.length; i++) {
+            if(path.extname(list[i]) === fileType) {
+                files.push(list[i]); //store the file name into the array files
+            }
+            files.push(list[i]);
+        }
+        callback(err, files);
+    });
+}
+// ============================
 
+// IMAGE ENDPOINTS =============================================================
+
+// GET POST IMAGE PAGE
+app.get('/postimage', function (req, res) {
+  res.writeHeader(200, { 'Content-Type': 'text/html' });
+  res.write('<form action="/images" enctype="multipart/form-data" method="POST">');
+  res.write('<input type="file" name="file" />');
+  res.write('<input type="text" name="userName" value="heran" />');
+  res.write('<input type="submit" />');
+  res.end('</form>');
+});
+
+// UPLOADING ENDPOINT
 app.post('/images', function(req,res) {
   var datetimestamp = Date.now();
-  console.log(req.body);
-  upload(req,res,function(err){
+  upload(req,res, function(err){
       if(err){
+          console.log(err);
+           res.status(400);
            res.json({error_code:1,err_desc:err});
            return;
       }
-  });
-  var nick = new Images({
-    userName: req.body.userName,
-    fileName: req.body.fileName
-  });
-  nick.save(function(err) {
-    if (err) throw err;
-    res.status(200);
-    res.json({error_code:0,err_desc:null});
-    console.log('Image saved successfully!');
+      var userName = req.body.userName ? req.body.userName : '';
+      var fullpath = 'http://localhost:5000/images/?image=' + req.body.fileName;
+      var nick = new Images({
+        userName: userName,
+        pathTofile: fullpath
+      });
+      nick.save(function(err) {
+        if (err) throw err;
+        res.status(200);
+        res.json({error_code:0,err_desc:null});
+        //res.redirect('/postimage');
+        console.log('Image saved successfully!');
+      });
   });
 });
 
-app.get('/image', function(req,res) {
+// VIEW IMAGES ENDPOINT
+app.get('/images', function(req,res) {
 //use the url to parse the requested url and get the image name
     var query = url.parse(req.url,true).query;
-        pic = query.image;
+    var pic = query.image;
 
     if (typeof pic === 'undefined') {
         getImages(imageDir, function (err, files) {
             var imageLists = '<ul>';
             for (var i=0; i<files.length; i++) {
-                imageLists += '<li><a href="image/?image=' + files[i] + '">' + files[i] + '</li>';
+                imageLists += '<li><a href="images/?image=' + files[i] + '">' + files[i] + '</li>';
             }
             imageLists += '</ul>';
             res.writeHead(200, {'Content-type':'text/html'});
@@ -147,33 +215,56 @@ app.get('/image', function(req,res) {
     }
 });
 
-//get the list of jpg files in the image dir
-function getImages(imageDir, callback) {
-    var fileType = '.jpg',
-        files = [], i;
-        console.log(imageDir);
-    fs.readdir(imageDir, function (err, list) {
-        for(i=0; i<list.length; i++) {
-            if(path.extname(list[i]) === fileType) {
-                console.log("fileext is there");
-                files.push(list[i]); //store the file name into the array files
-            }
-            files.push(list[i]);
-        }
-        callback(err, files);
-    });
-}
-
-app.get('/imageup', function(req,res) {
-  res.sendFile(__dirname + '/client/index.html');
+// TEMPORARY ADDING IMAGES TO DB
+app.get('/images_push', function(req,res) {
+  var nick = new Images({
+    userName: 'hp',
+    pathTofile: 'https://encrypted-tbn2.gstatic.com/images?q=tbn:ANd9GcS1eM3EKHnOl4W5L5qfWhyx6-wbIg0ZqxV57TME33P6aBdbyVpK'
+  });
+  nick.save(function(err) {
+    if (err) throw err;
+    res.status(200);
+    res.json({error_code:0,err_desc:null});
+    //res.redirect('/postimage');
+    console.log('Image saved successfully!');
+  });
 });
 
+// IMAGES DATABASE
 app.get('/images_db', function(req,res) {
   Images.find({}, function(err, images) {
     req.socket.setTimeout(10 * 60 * 1000);
     res.status(200);
     res.json(images);
   });
+});
+
+// app.get('/clusters_db', function(req, res) {
+//   var new_cluster = new Clusters({
+//     cluster_id: 1,
+//     keywords: ['Yosemite', 'Park'],
+//     images: ["https://content-oars.netdna-ssl.com/wp-content/uploads/2015/12/Yosemite.Fran_.jpg",
+//     "http://www.yosemite.com/wp-content/uploads/2016/03/Yosemite-Falls-in-Spring-Mariposa-County.jpg",
+//     "http://travels.kilroy.net/media/8955815/yosemite-national-park-river_517x291.jpg"]
+//   });
+//   new_cluster.save(function(err) {
+//     if (err) throw err;
+//     console.log('Message saved in Database!');
+//   });
+//   res.send("Cluster Saved!");
+// });
+
+app.get('/clusters_db', function(req,res) {
+  Clusters.find({}, function(err, cluster) {
+    req.socket.setTimeout(10 * 60 * 1000);
+    res.status(200);
+    res.json(cluster);
+  });
+});
+
+// BACKUP IMAGE POSTING
+app.get('/imageup', function(req,res) {
+  res.sendFile(__dirname + '/client/index.html');
 });
 
 // APIDOCS ------------------------------------------------------------

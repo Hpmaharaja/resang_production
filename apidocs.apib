@@ -167,83 +167,50 @@ Retrieve All Messages
             }
         ]
 
-## Images [/images]
+# Group Images
 
-### POST
-Upload and Save an Image
+## POST /images
+
+  + Parameters
+      + userName : `hp` (string, required) - The userName of user posting the event
+      + file : `file` (file, required) - The file to upload
 
 + Request
 
     + Body
 
-            { "file" : "" }
+            { "userName" : "",
+              "file" : "" }
 
 + Response 200 (application/json)
 
-        {
-          success: true,
-          message: 'Image Uploaded Successfully!'
-        }
+        { error_code : 0,
+          err_desc : null }
 
-### GET
-Retrieve all the images.
++ Response 400 (application/json)
+
+        {  error_code : 1,
+           err_desc : err }
+
+## POST /api/event/search
+
+  + Parameters
+      + latitude : `10.10` (string, required) - The user's current latitude
+      + longitude : `10.10` (string, required) - The user's current longitude
+
++ Request
+
+    + Body
+
+            {
+              "latitude" : "",
+              "longitude" : ""
+            }
+
+    + Headers
+
+            Authorization: YOUR_TOKEN_HERE
 
 + Response 200
 
-                [
-                        {
-                        "_id": "58b6336c3e0ed9354c9a1bea",
-                        "__v": 0,
-                        "timestamp": "2017-03-01T02:35:24.966Z"
-                        },
-                        {
-                        "_id": "58b633aed582791e8056f3a8",
-                        "__v": 0,
-                        "timestamp": "2017-03-01T02:36:30.090Z"
-                        },
-                        {
-                        "_id": "58b634da882b052568a29abc",
-                        "__v": 0,
-                        "timestamp": "2017-03-01T02:41:30.132Z"
-                        },
-                        {
-                        "_id": "58b634f50200ad34cc3d2907",
-                        "__v": 0,
-                        "timestamp": "2017-03-01T02:41:57.399Z"
-                        },
-                        {
-                        "_id": "58b63550fffe1e32500b8a48",
-                        "__v": 0,
-                        "timestamp": "2017-03-01T02:43:28.563Z"
-                        },
-                        {
-                        "_id": "58b638989216e02e4c3207e1",
-                        "__v": 0,
-                        "timestamp": "2017-03-01T02:57:28.177Z"
-                        },
-                        {
-                        "_id": "58b638aab6f63f096cf6b755",
-                        "__v": 0,
-                        "timestamp": "2017-03-01T02:57:46.751Z"
-                        },
-                        {
-                        "_id": "58b6394e45d6811f289c91b3",
-                        "__v": 0,
-                        "timestamp": "2017-03-01T03:00:30.611Z"
-                        },
-                        {
-                        "_id": "58b639714bee86280838e7e2",
-                        "__v": 0,
-                        "timestamp": "2017-03-01T03:01:05.434Z"
-                        },
-                        {
-                        "_id": "58b6399fda15270ae86b950b",
-                        "__v": 0,
-                        "timestamp": "2017-03-01T03:01:51.408Z"
-                        },
-                        {
-                        "_id": "58b639e9fb546a13b8817b5d",
-                        "__v": 0,
-                        "timestamp": "2017-03-01T03:03:05.399Z"
-                        }
-                ]
+        [events]
