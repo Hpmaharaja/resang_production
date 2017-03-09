@@ -1,0 +1,8 @@
+HOSTNAME: ec2-52-90-62-197.compute-1.amazonaws.com
+username: ec2-user
+password:
+
+
+COMMAND to ssh:
+
+ssh -i "pem_key" ec2-user@ec2-52-90-62-197.compute-1.amazonaws.com
