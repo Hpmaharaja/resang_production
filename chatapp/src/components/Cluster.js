@@ -19,7 +19,7 @@ class Cluster extends React.Component {
     const images = this.props.images.map((imageURL, i) => {
       return (
           <img className='image-for-grid' src={imageURL} onLoad={this.handleImageLoaded.bind(this)}
-          onError={this.handleImageErrored.bind(this)} /> 
+          onError={this.handleImageErrored.bind(this)} />
       );
     });
 

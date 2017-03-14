@@ -77,6 +77,22 @@ io.on('connection', function (socket) {
     socket.broadcast.emit('server:message', data);
   });
 
+  socket.on('client:image', function (data) {
+    console.log(data.username + ': ' + data.imageURL);
+    var new_image = new Images({
+      userName: data.username,
+      pathTofile: data.imageURL,
+      processed: false
+    });
+    new_image.save(function(err) {
+      if (err) throw err;
+      console.log('Image saved in Database!');
+    });
+
+    // message received from client, now broadcast it to everyone else
+    socket.broadcast.emit('server:message', data);
+  });
+
   socket.on('disconnect', function () {
     console.log(username + ' disconnected');
   });
@@ -169,17 +185,21 @@ app.post('/images', function(req,res) {
       }
       var userName = req.body.userName ? req.body.userName : '';
       var fullpath = 'http://localhost:5000/images/?image=' + req.body.fileName;
-      var nick = new Images({
-        userName: userName,
-        pathTofile: fullpath
-      });
-      nick.save(function(err) {
-        if (err) throw err;
-        res.status(200);
-        res.json({error_code:0,err_desc:null});
-        //res.redirect('/postimage');
-        console.log('Image saved successfully!');
-      });
+      // var nick = new Images({
+      //   userName: userName,
+      //   pathTofile: fullpath
+      // });
+      // nick.save(function(err) {
+      //   if (err) throw err;
+      //   res.status(200);
+      //   res.json({error_code:0,err_desc:null});
+      //   //res.redirect('/postimage');
+      //   console.log('Image saved successfully!');
+      // });
+      res.status(200);
+      res.json({error_code:0,err_desc:null, timestamp: res.timestamp});
+      //res.redirect('/postimage');
+      console.log('Image saved successfully!');
   });
 });
 

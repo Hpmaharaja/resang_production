@@ -6,7 +6,7 @@ import request from 'superagent';
 class DropzoneDemo extends React.Component {
   constructor(props) {
     super(props);
-    this.state = { url: '', fileName: '' };
+    this.state = { url: '', fileName: '', timestamp: '' };
     //this.handleImageUpload = this.handleImageUpload.bind(this);
   }
 
@@ -34,9 +34,13 @@ class DropzoneDemo extends React.Component {
       this.setState({
         url: 'http://localhost:5000/images/?image=' + this.state.fileName
       });
-      console.log(response);
+      console.log('Response:', response);
+      this.setState({
+        timestamp: response.timestamp
+      });
+      // console.log(response);
     });
-    this.props.onDrop(this.state.url);
+    this.props.onDrop({ url: this.state.url, timestamp: this.state.timestamp});
     //this.handleImageUpload(files[0]);
   }
 

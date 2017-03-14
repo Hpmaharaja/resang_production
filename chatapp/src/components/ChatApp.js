@@ -13,9 +13,8 @@ class ChatApp extends React.Component {
   socket = {};
   constructor(props) {
     super(props);
-    this.state = { messages: [{username: 'RESANG', message: 'Welcome to RESANG! Your messages will show up on this side!', fromMe: true}],
+    this.state = { messages: [{username: 'RESANG', message: 'Welcome to RESANG! Your messages will show up on this side!', fromMe: true, msgOrimg: 'msg', timestamp: "2000-03-14T01:19:31.095Z"}],
     posts: [{ userName: 'Heran', message: 'helloworld!' },{ userName: 'Bob', message: 'That is too clique!' }],
-    images: [{ username: 'Heran', imageURL: 'http://localhost:5000/images/?image=heran_1438892674000_IMG_6517.JPG.jpg'}],
     temp_images: [{ userName: 'Heran', pathTofile: 'http://localhost:5000/images/?image=heran_1438892674000_IMG_6517.JPG.jpg'}]};
     this.sendHandler = this.sendHandler.bind(this);
     this.imgHandler = this.imgHandler.bind(this);
@@ -29,64 +28,85 @@ class ChatApp extends React.Component {
     });
   }
 
+  getInitialState (){
+    return{
+      final_sortedStack:[]
+    }
+  }
+
   componentDidMount() {
     // GET MESSAGES
+    console.log('GET MESSAGES');
     const posts = this.state.posts;
     axios.get('http://localhost:5000/messages')
       .then(res => {
-        // console.log(res);
         res.data.map((obj) => posts.push(obj));
         this.setState({ posts });
-        // /console.log(this.state.posts);
         this.state.posts.map(function(mes) {
-          // console.log(i);
-          // console.log(mes);
           const messageObject = {
             username: mes.userName,
-            message: mes.message
+            message: mes.message,
+            msgOrimg: 'msg',
+            timestamp: mes.timestamp
           };
           if (mes.userName === this.props.username) {
             messageObject.fromMe = true;
           } else {
             messageObject.fromMe = false;
           }
-          // console.log(messageObject);
+          // console.log('MESSAGE OBJECT:', messageObject);
           const messages = this.state.messages;
           messages.push(messageObject);
           this.setState({ messages });
-          //this.addMessage(messageObject);
         }, this);
     });
 
     // GET IMAGE URLS
+    console.log('GET IMAGES');
     const temp_images = this.state.temp_images;
     axios.get('http://localhost:5000/images_db')
       .then(res => {
-        // console.log(res);
         res.data.map((obj) => temp_images.push(obj));
         this.setState({ temp_images });
-        console.log(this.state.temp_images);
         this.state.temp_images.map(function(imgobj) {
-          // console.log(i);
-          // console.log(mes);
           const imageObject = {
             username: imgobj.userName,
-            imageURL: imgobj.pathTofile
+            imageURL: imgobj.pathTofile,
+            msgOrimg: 'img',
+            timestamp: imgobj.timestamp
           };
           if (imgobj.userName === this.props.username) {
             imageObject.fromMe = true;
           } else {
             imageObject.fromMe = false;
           }
-          console.log(imageObject);
-          const images = this.state.images;
-          images.push(imageObject);
-          this.setState({ images });
+          // console.log('IMAGE OBJECT:', imageObject);
+          // Unification
+          const messages = this.state.messages;
+          messages.push(imageObject);
+          this.setState({ messages });
         }, this);
     });
+
+    setTimeout(function() {
+      // Sorting the messages and the images
+      var messages = this.state.messages;
+      messages.sort( function( a, b )
+      {
+        var index = 4;
+        var direction = 1;
+        // Sort by the 2nd value in each array
+        if ( a.timestamp == b.timestamp ) return 0;
+        return a.timestamp < b.timestamp ? -direction : direction;
+      });
+      // this.setState({ messages });
+      this.setState({ final_sortedStack: messages });
+      console.log('Messages:', this.state.final_sortedStack);
+    }.bind(this), 1000);
   }
 
   sendHandler(message) {
+    console.log('sendHandler');
     const messageObject = {
       username: this.props.username,
       message
@@ -96,44 +116,50 @@ class ChatApp extends React.Component {
     this.socket.emit('client:message', messageObject);
 
     messageObject.fromMe = true;
+    messageObject.msgOrimg = 'msg';
     this.addMessage(messageObject);
   }
 
   imgHandler(image) {
-    console.log('Image Handler');
-    if (image) {
+    console.log('imgHandler');
+    if (image.url) {
       const imageObject = {
         username: this.props.username,
-        imageURL: image
+        imageURL: image.url,
+        msgOrimg: 'img',
+        timestamp: image.timestamp
       };
 
-      console.log(imageObject);
+      // Emit the image to the server
+      this.socket.emit('client:image', imageObject);
       imageObject.fromMe = true;
+
+      console.log('IMAGE OBJECT: ', imageObject);
       this.addImage(imageObject);
     }
   }
 
   addMessage(message) {
     // Append the message to the component state
-    //console.log('add Message');
+    console.log('addMessage');
     const messages = this.state.messages;
     messages.push(message);
     this.setState({ messages });
   }
 
   addImage(imageObject) {
-    console.log('Add Image');
-    const images = this.state.images;
-    images.push(imageObject);
-    this.setState({ images });
+    console.log('addImage');
+    const messages = this.state.messages;
+    messages.push(imageObject);
+    this.setState({ messages });
   }
 
   render() {
+    // console.log(this.state.messages);
     return (
       <div className="container">
         <h3>RESANG Chat App</h3>
-        <Messages messages={this.state.messages}
-                  images={this.state.images}
+        <Messages messages={this.state.final_sortedStack}
          />
          <div className="bottom_input">
           <ChatInput onSend={this.sendHandler} />

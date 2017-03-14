@@ -6,5 +6,6 @@ var Schema = mongoose.Schema;
 module.exports = mongoose.model('Clusters', new Schema({
     cluster_id: Number,
     keywords: Array,
-    images: Array
+    images: Array,
+    timestamp: { type : Date, default: Date.now }
 }));

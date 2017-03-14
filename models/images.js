@@ -11,5 +11,6 @@ module.exports = mongoose.model('Images', new Schema({
     ml_keywords: Array,
     chatID: Number,
     clusterID: String,
+    processed: Boolean,
     timestamp: { type : Date, default: Date.now }
 }));
