@@ -12,5 +12,6 @@ module.exports = mongoose.model('Images', new Schema({
     chatID: Number,
     clusterID: String,
     processed: Boolean,
+    localPath: String,
     timestamp: { type : Date, default: Date.now }
 }));

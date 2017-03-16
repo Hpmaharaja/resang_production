@@ -10,16 +10,17 @@ var morgan      = require('morgan');
 var mongoose    = require('mongoose');
 var cors = require('cors');
 var multer = require('multer');
+var sharp = require('sharp');
 var fs = require('fs'),
     path = require('path'),
     url = require('url');
-var imageDir = 'C:/resang/resang_users/uploads/';
+var imageDir = 'uploads/';
 
 // CHAT APP STUFF
-let chat_app = require('express')();
-let http = require('http').createServer(chat_app);
+var chat_app = require('express')();
+var http = require('http').createServer(chat_app);
 var io = require( "socket.io" )( http );
-http.listen(5001, "127.0.0.1");
+http.listen(5007);
 
 var jwt    = require('jsonwebtoken'); // used to create, sign, and verify tokens
 var config = require('./config'); // get our config file
@@ -44,7 +45,8 @@ app.use(morgan('dev'));
 // CORS ISSUE RESOLVED
 app.use(cors());
 
-app.set('port', (process.env.PORT || 5000));
+app.set('port', (process.env.PORT || 5600));
+app.use(express.static(__dirname + '/chatapp/dist/'));
 
 // ======================================================================
 // ROUTES
@@ -79,14 +81,21 @@ io.on('connection', function (socket) {
 
   socket.on('client:image', function (data) {
     console.log(data.username + ': ' + data.imageURL);
-    var new_image = new Images({
-      userName: data.username,
-      pathTofile: data.imageURL,
-      processed: false
-    });
-    new_image.save(function(err) {
-      if (err) throw err;
-      console.log('Image saved in Database!');
+    Images.findOne({ 'pathTofile' : data.imageURL }, function(err, images) {
+      if (err) {console.log(err);}
+      if (!images) {
+        console.log('IMAGE NOT IN DATABASE!');
+        var new_image = new Images({
+          userName: data.username,
+          pathTofile: data.imageURL,
+          processed: false,
+          localPath: data.localPath
+        });
+        new_image.save(function(err) {
+          if (err) throw err;
+          console.log('Image saved in Database!');
+        });
+      }
     });
 
     // message received from client, now broadcast it to everyone else
@@ -129,11 +138,12 @@ app.get('/messages', function(req,res) {
 // IMAGE STORAGE FUNCTIONS ====
 var storage = multer.diskStorage({ //multers disk storage settings
         destination: function (req, file, cb) {
-            cb(null, 'uploads/');
+            cb(null, '/uploads');
         },
         filename: function (req, file, cb) {
             // var datetimestamp = Date.now();
-            console.log(file);
+            // console.log(file);
+            console.log('Uploading... REQUEST.BODY');
             console.log(req.body);
             //cb(null, datetimestamp + '_' + file.originalname + '_' + req.body.userName + '.jpg');
             cb(null, req.body.fileName);
@@ -156,6 +166,7 @@ function getImages(imageDir, callback) {
             }
             files.push(list[i]);
         }
+     
         callback(err, files);
     });
 }
@@ -176,6 +187,14 @@ app.get('/postimage', function (req, res) {
 // UPLOADING ENDPOINT
 app.post('/images', function(req,res) {
   var datetimestamp = Date.now();
+  sharp(req.body.file).resize(300, 200).toFile('./uploads/', function(err) {
+         if (err) {
+           throw err;
+         }
+         // output.jpg is a 300 pixels wide and 200 pixels high image
+         // containing a scaled and cropped version of input.jpg
+         console.log('resized!');
+      });
   upload(req,res, function(err){
       if(err){
           console.log(err);
@@ -185,21 +204,10 @@ app.post('/images', function(req,res) {
       }
       var userName = req.body.userName ? req.body.userName : '';
       var fullpath = 'http://localhost:5000/images/?image=' + req.body.fileName;
-      // var nick = new Images({
-      //   userName: userName,
-      //   pathTofile: fullpath
-      // });
-      // nick.save(function(err) {
-      //   if (err) throw err;
-      //   res.status(200);
-      //   res.json({error_code:0,err_desc:null});
-      //   //res.redirect('/postimage');
-      //   console.log('Image saved successfully!');
-      // });
       res.status(200);
       res.json({error_code:0,err_desc:null, timestamp: res.timestamp});
       //res.redirect('/postimage');
-      console.log('Image saved successfully!');
+      console.log('Image uploaded successfully!');
   });
 });
 
@@ -224,7 +232,7 @@ app.get('/images', function(req,res) {
         fs.readFile(imageDir + pic, function (err, content) {
             if (err) {
                 res.writeHead(400, {'Content-type':'text/html'})
-                console.log(err);
+                // console.log(err);
                 res.end("No such image");
             } else {
                 //specify the content type in the response will be an image

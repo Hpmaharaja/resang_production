@@ -47,7 +47,7 @@ class App extends React.Component {
     return (
       <div>
         <form onSubmit={this.usernameSubmitHandler} className="username-container">
-          <h1>RESANG chat Application</h1>
+          <h1>RESANG GROUPCHAT APPLICATION</h1>
           <div>
             <input
               type="text"
@@ -58,13 +58,12 @@ class App extends React.Component {
           <input type="submit" value="Submit" />
         </form>
         <form onSubmit={this.dashboardSubmitHandler} className="username-container">
-          <h1>RESANG Dashboard</h1>
+          <h1>RESANG DASHBOARD</h1>
           <input type="submit" value="Dashboard" />
         </form>
       </div>
     );
   }
-
 }
 App.defaultProps = {
 };

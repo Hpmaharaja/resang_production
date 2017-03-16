@@ -6,3 +6,8 @@ password:
 COMMAND to ssh:
 
 ssh -i "pem_key" ec2-user@ec2-52-90-62-197.compute-1.amazonaws.com
+
+// NEW KEYS
+ssh -i "resang.pem" ubuntu@ec2-52-40-231-190.us-west-2.compute.amazonaws.com
+
+ssh -i "resang_ec2.pem" ec2-user@ec2-35-161-56-59.us-west-2.compute.amazonaws.com

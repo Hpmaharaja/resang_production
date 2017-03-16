@@ -2,6 +2,8 @@ require('../styles/ChatApp.css');
 
 import React from 'react';
 import axios from 'axios';
+import config from '../config';
+import LeftSidebar from './menu';
 
 import Cluster from './Cluster';
 
@@ -9,8 +11,8 @@ class Dashboard extends React.Component {
   constructor(props) {
     super(props);
 
-    this.state = { images: [{ username: 'Heran', imageURL: 'http://localhost:5000/images/?image=heran_1438892674000_IMG_6517.JPG.jpg'}],
-    temp_images: [{ userName: 'Heran', pathTofile: 'http://localhost:5000/images/?image=heran_1438892674000_IMG_6517.JPG.jpg'}],
+    this.state = { images: [{ username: 'Heran', imageURL: 'http://localhost:5480/images/?image=heran_1438892674000_IMG_6517.JPG.jpg'}],
+    temp_images: [{ userName: 'Heran', pathTofile: 'http://localhost:5480/images/?image=heran_1438892674000_IMG_6517.JPG.jpg'}],
     clusters: [{ _id: 20,
     cluster_id: 0,
     __v:2,
@@ -31,13 +33,13 @@ class Dashboard extends React.Component {
 
   redirectSubmitHandler(event) {
     event.preventDefault();
-    window.location.href = 'http://localhost:8000';
+    window.location.href = config.frontend_home;
   }
 
   componentDidMount() {
     // GET IMAGE URLS
     const temp_images = this.state.temp_images;
-    axios.get('http://localhost:5000/images_db')
+    axios.get(config.images_db)
       .then(res => {
         // console.log(res);
         res.data.map((obj) => temp_images.push(obj));
@@ -64,7 +66,7 @@ class Dashboard extends React.Component {
 
     // GET IMAGES CLUSTERS
     const clusters = this.state.clusters;
-    axios.get('http://localhost:5000/clusters_db')
+    axios.get(config.clusters_db)
       .then(res => {
         // console.log(res);
         res.data.map(function(cluster) {
@@ -75,11 +77,22 @@ class Dashboard extends React.Component {
     });
   }
 
+  showLeft() {
+    this.refs.left.show();
+  }
+
   render() {
     const images = this.state.images.map((imageURL, i) => {
       return (
-          <img className='image-for-grid' src={imageURL.imageURL} onLoad={this.handleImageLoaded.bind(this)}
-          onError={this.handleImageErrored.bind(this)} />
+      <div>
+        <figure>
+            <img className='image-for-grid' src={imageURL.imageURL} onLoad={this.handleImageLoaded.bind(this)}
+            onError={this.handleImageErrored.bind(this)} />
+            <figcaption>
+              <p>Keyword: India Trip!</p>
+            </figcaption>
+        </figure>
+      </div>
       );
     });
 
@@ -95,11 +108,14 @@ class Dashboard extends React.Component {
     return (
       <div className="container">
         <h3>RESANG Memories Dashboard</h3>
+        <div id="outer-container" style={{height: '100%'}}>
+          <LeftSidebar />
+          <div id="page-wrap">
+            <p></p>
+          </div>
+        </div>
         <div className='image-grid'>
           { images }
-        </div>
-        <div>
-          { cluster_group }
         </div>
         <form onSubmit={this.redirectSubmitHandler} className="go-back">
           <input type="submit" value="< Go back" />

@@ -1,12 +1,13 @@
 import React from 'react';
 import Dropzone from 'react-dropzone';
 import request from 'superagent';
+import config from '../config';
 
 
 class DropzoneDemo extends React.Component {
   constructor(props) {
     super(props);
-    this.state = { url: '', fileName: '', timestamp: '' };
+    this.state = { url: '', fileName: '', timestamp: '', localPath: '', uploaded: false };
     //this.handleImageUpload = this.handleImageUpload.bind(this);
   }
 
@@ -21,62 +22,61 @@ class DropzoneDemo extends React.Component {
     });
     // console.log(this.props);
     // console.log(this.state);
-    let upload = request.post('http://localhost:5000/images')
+    let upload = request.post(config.images)
                         .field('userName', this.props.username)
-                        .field('fileName', this.state.fileName)
+                        .field('fileName', filename)
                         .field('file', files[0]);
 
     upload.end((err, response) => {
       if (err) {
-        console.error(err);
-      }
-
-      this.setState({
-        url: 'http://localhost:5000/images/?image=' + this.state.fileName
-      });
-      console.log('Response:', response);
-      this.setState({
-        timestamp: response.timestamp
-      });
-      // console.log(response);
+        console.log('UPLOAD ERROR: ' + err);
+          // let upload2 = request.post(config.images)
+          //                     .field('userName', this.props.username)
+          //                     .field('fileName', this.state.fileName)
+          //                     .field('file', files[0]);
+          // upload2.end((err2, response2) => {
+          //   if (err2) {
+          //     console.error('UPLOAD ERROR 2: ' + err2);
+          //     this.props.onDrop({ url: this.state.url, timestamp: this.state.timestamp, localPath: this.state.localPath, uploaded: false });
+          //   } else {
+          //       console.log('Second Response:',response2);
+          //       this.setState({
+          //         url: config.images + '/?image=' + filename
+          //       });
+          //       this.setState({
+          //         timestamp: response2.timestamp
+          //       });
+          //       this.setState({
+          //         localPath: '/root/Developer/resang_production/uploads/' + filename
+          //       });
+          //       this.setState({
+          //         uploaded: true
+          //       });
+          //       console.log(this.state);
+          //       this.props.onDrop({ url: this.state.url, timestamp: this.state.timestamp, localPath: this.state.localPath, uploaded: true });
+          //   }
+          // });
+      } 
+          console.log('FIRST SUCCESS UPLOAD!');
+          this.setState({
+            url: config.images + '/?image=' + filename
+          });
+          console.log('Response:', response);
+          this.setState({
+            timestamp: response
+          });
+          this.setState({
+            localPath: '/root/Developer/resang_production/uploads/' + filename
+          });
+          this.setState({
+            uploaded: true
+          });
+          console.log(this.state);
+          this.props.onDrop({ url: this.state.url, timestamp: this.state.timestamp, localPath: this.state.localPath, uploaded: true });
+        
     });
-    this.props.onDrop({ url: this.state.url, timestamp: this.state.timestamp});
     //this.handleImageUpload(files[0]);
   }
-
-  // handleImageUpload(file) {
-  //   console.log(this.props);
-  //   console.log(this.state);
-  //   let upload = request.post('http://localhost:5000/images')
-  //                       .field('userName', this.props.username)
-  //                       .field('fileName', this.state.fileName)
-  //                       .field('file', file);
-  //
-  //   upload.end((err, response) => {
-  //     if (err) {
-  //       console.error(err);
-  //     }
-  //
-  //     // if (response.body.secure_url !== '') {
-  //     //   this.setState({
-  //     //     uploadedFileCloudinaryUrl: response.body.secure_url
-  //     //   });
-  //     // }
-  //     this.setState({
-  //       url: response.pathTofile
-  //     });
-  //     console.log(response);
-  //   });
-  // }
-
-  // IMAGE RENDERING PREVIEW ON DROP
-  // <div>
-  //   {this.state.url === '' ? null :
-  //   <div>
-  //     <p>{this.state.url}</p>
-  //     <img src={this.state.url} />
-  //   </div>}
-  // </div>
 
   render () {
     return (

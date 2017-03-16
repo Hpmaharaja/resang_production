@@ -37,7 +37,7 @@ jspm_packages
 .node_repl_history
 
 # Uploads
-uploads
+uploads/*
 
 # Chat App Node Modules
 */chatapp/node_modules
