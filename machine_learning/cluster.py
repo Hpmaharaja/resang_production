@@ -6,14 +6,25 @@ import numpy as np
 from sklearn import cluster, datasets
 import geopy
 from geopy.distance import great_circle
-from pymongo import MongoClient 
+import pymongo
+from pymongo import MongoClient
 import csv
 from operator import itemgetter 
+import pprint
 import pyexifinfo as p
 import datetime
 
 client = MongoClient('mongodb://hpmaharaja:Jaganath1@ds117869.mlab.com:17869/resang_users')
 db = client.resang_users
+
+'''
+def insert_images(images):
+    collection = db.images
+    for image in images:
+        json_cluster = {'ml_keywords': [], 'userName': 'testing', 'timestamp': datetime.datetime(2017, 3, 14, 5, 19, 58, 133000), '__v': 0, 'pathTofile': 'http://localhost:5000/images/?image=hp_1473587780000_IMG_8177.JPG', 'processed': False}
+        json_cluster['localPath'] = image['FileName']
+        collection.insert_one(json_cluster)
+'''
 
 def get_EXIF(image):
     path_name = image['FileName']
@@ -102,13 +113,23 @@ def get_keyword(image):
     image['Keyword'] = top_keywords
     return image
 
-def calculate_distance(a,b):
-    distance_time = abs( float(a['Timestamp']) - float(b['Timestamp']) )
-    gps_a = (a['Latitude'],a['Longitude'])
-    gps_b = (b['Latitude'],b['Longitude'])
+def calc_affinity(X):
+    dists = np.zeros((X.shape[0],X.shape[0]))
+    for i in range(X.shape[0]):
+        for j in range(X.shape[0]):
+            dists[i,j] = calc_distance((X[i],X[j]))
+    return dists
+
+def calc_distance(t):
+    print(t)
+    (a,b) = t
+    distance_time = abs( float(a[0]) - float(b[0]) )
+    gps_a = (a[1],a[2])
+    gps_b = (b[1],b[2])
     distance_meters = great_circle(gps_a,gps_b).meters
     distance = distance_time + distance_meters 
-   
+    return distance
+
 def get_clusters():
     collection = db.clusters
     cursor = db.clusters.find()
@@ -125,69 +146,58 @@ def get_unprocessed_images(db_or_csv):
             image['FileName'] = document['localPath']
             images.append(image)
         return images
-    else: 
-        images = []
-        times = []
-        dists = []
-        ml_dists = []
-        with open('../EXIF/copy.csv') as csvfile:
-            reader = csv.DictReader(csvfile)
-            for row in reader:
-                times.append(row['Timestamp'])
-                dists.append(row['Distance (km)'])
-                ml_dists.append(row['Distance (ML_formula)'])
-                images.append(row)
-        return (times,dists,ml_dists,images)
 
 def insert_cluster(json_cluster):
     collection = db.clusters
     collection.insert_one(json_cluster)
 
-def format_cluster(cluster_with_id,id): 
+def get_largest_cluster_id():
+    collection = db.clusters
+    max_id = 0
+    try:
+        max_id = db.clusters.find().sort('cluster_id',pymongo.DESCENDING)[0]['cluster_id']
+    except IndexError:
+        pass
+    return max_id
+    
+
+def format_cluster(cluster_with_id,ID): 
     cluster_formatted = {}
-    cluster_formatted['cluster_id'] = id
+    cluster_formatted['cluster_id'] = ID
     cluster_formatted['images'] = []
-    cluster_formatted['keywords'] = []
+    keywords_set = set()
     for c in cluster_with_id:
         cluster_formatted['images'].append(c['FileName'])
-        cluster_formatted['keywords'].append(c['Keyword'])
+        keywords_set.add(c['Keyword'])
+    cluster_formatted['keywords'] = list(keywords_set)
     print(cluster_formatted)
     return cluster_formatted
     
-def create_agglomerative_clusters(times,dists):
-    X = [times,dists]
-    print(X)
-    agglomerative = cluster.AgglomerativeClustering(
-        linkage="complete", affinity="cityblock", n_clusters=2)
-    #agglomerative = cluster.AgglomerativeClustering(
-    #    linkage="complete", affinity=get_distance(a,b), n_clusters=2)
-    fit = agglomerative.fit(X)
-    fit_predict = agglomerative.fit_predict(X)
-    print(fit)
-    print(fit_predict)
-    print(type(agglomerative))
-
-def chunkIt(seq, num):
-    avg = len(seq) / float(num)
-    out = []
-    last = 0.0
-
-    while last < len(seq):
-        out.append(seq[int(last):int(last + avg)])
-        last += avg
-
-    return out
-
-def create_basic_clusters(images):
+def create_agglomerative_clusters(images):
+    Xf = np.zeros((len(images),3))
+    for i in range(len(images)):
+        Xf[i,0] = images[i]['Timestamp']
+        Xf[i,1] = images[i]['Latitude']
+        Xf[i,2] = images[i]['Longitude']
     num_clusters = 5
-    images = sorted(images, key=itemgetter('Distance_ML'))
-    clusters = chunkIt(images,num_clusters)
+    agglomerative = cluster.AgglomerativeClustering(
+        linkage="complete", affinity=calc_affinity, n_clusters=num_clusters)
+    fit = agglomerative.fit(Xf)
+    fit_predict = agglomerative.fit_predict(Xf)
+    print(fit_predict)
+    max_id = get_largest_cluster_id()
+    for i in range(len(fit_predict)): 
+        cluster_id = fit_predict[i] + 1 + max_id
+        images[i]['Cluster_id'] = cluster_id
+    images = sorted(images, key=itemgetter('Cluster_id'))
+    ID = -1
     for i in range(num_clusters):
-        cluster_id = i+1
-        for j in range(len(clusters[i])):
-            clusters[i][j]['Cluster_id'] = cluster_id
-        json_to_insert = format_cluster(clusters[i],cluster_id)
+        cluster_id = i + 1 + max_id
+        temp_cluster = [image for image in images if image['Cluster_id'] == cluster_id]
+        pprint.pprint(temp_cluster)
+        json_to_insert = format_cluster(temp_cluster,cluster_id)
         insert_cluster(json_to_insert)
+    
     
 def update_images_db(images):
     collection = db.images
@@ -206,7 +216,7 @@ def main():
     for i in range(len(images)):
         image = images[i]
         images[i] = get_keyword(image)
-    create_basic_clusters(images)    
+    create_agglomerative_clusters(images) 
     update_images_db(images) 
 
     
