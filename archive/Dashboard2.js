@@ -2,7 +2,6 @@ require('../styles/ChatApp.css');
 
 import React from 'react';
 import axios from 'axios';
-import config from '../config';
 import LeftSidebar from './menu';
 
 import Cluster from './Cluster';
@@ -11,7 +10,7 @@ class Dashboard extends React.Component {
   constructor(props) {
     super(props);
 
-   this.state = { images: [{ username: 'Heran', imageURL: 'http://localhost:5000/images/?image=heran_1438892674000_IMG_6517.JPG.jpg'}],
+    this.state = { images: [{ username: 'Heran', imageURL: 'http://localhost:5000/images/?image=heran_1438892674000_IMG_6517.JPG.jpg'}],
     temp_images: [{ userName: 'Heran', pathTofile: 'http://localhost:5000/images/?image=heran_1438892674000_IMG_6517.JPG.jpg'}],
     clusters: [{ _id: 20,
     cluster_id: 1,
@@ -50,13 +49,13 @@ class Dashboard extends React.Component {
 
   redirectSubmitHandler(event) {
     event.preventDefault();
-    window.location.href = config.frontend_home;
+    window.location.href = 'http://localhost:8000';
   }
 
   componentDidMount() {
     // GET IMAGE URLS
     const temp_images = this.state.temp_images;
-    axios.get(config.images_db)
+    axios.get('http://localhost:5000/images_db')
       .then(res => {
         // console.log(res);
         res.data.map((obj) => temp_images.push(obj));
@@ -83,7 +82,7 @@ class Dashboard extends React.Component {
 
     // GET IMAGES CLUSTERS
     const clusters = this.state.clusters;
-    axios.get(config.clusters_db)
+    axios.get('http://localhost:5000/clusters_db')
       .then(res => {
         // console.log(res);
         res.data.map(function(cluster) {
@@ -93,10 +92,10 @@ class Dashboard extends React.Component {
         }, this);
     });
   }
-
   showLeft() {
     this.refs.left.show();
   }
+
 
   render() {
     const images = this.state.images.map((imageURL, i) => {

@@ -13,13 +13,23 @@
 }
 
 h3 {
-  position: 'fixed';
+  position: 'absolute';
 
   text-align: center;
   padding: 20px 0;
   margin: 0;
   border-bottom: 1px solid #ddd;
-  background-color: #eee;
+  background-color: #e6e6e6;
+  color: black;
+}
+h4{
+  position: 'fixed';
+  text-align: center;
+  padding: 15px 0;
+  font: 30px;
+  color: white;
+  border-bottom: 1px solid #ddd;
+  background-color: #6600cc;
 }
 
 .bottom_input {
@@ -107,35 +117,42 @@ h3 {
 }
 
 .image-grid {
-  background-color: #fff;
+  /*background-color: #fff;
     background-size: 1.5em 1.5em, .5em .5em;
     font-family: sans-serif;
     font-size: 100%;
     line-height: 1.5;
     margin: 0 auto;
-    padding: 1.5em;
-    width: 100%;
+    padding: 1.5em;*/
+    //width: 100px;
+    //height: 100px;
+    height: 200px;
+    flex-grow: 1;
+    display: inline-block;
 }
 figure {
     float: left;
     height: 6em;
     margin: 1.5em;
     width: 12em;
-    -webkit-transform: perspective(500);
-    -webkit-transform-style: preserve-3d;
-    -webkit-transition: .5s;
+  //  -webkit-transform: perspective(500);
+  //  -webkit-transform-style: preserve-3d;
+  //  -webkit-transition: .5s;
 }
- figure:hover {
+/* figure:hover {
     -webkit-transform: perspective(500) rotateX(90deg) translateY(-3em) translateZ(3em);
-}
+}*/
 img {
-    background-color: #222;
-    box-shadow: 0 20px 15px -10px hsla(0,0%,0%,.25);
-    display: block;
-    height: 100%;
-    width: 100%;
-    -webkit-transition: .5s;
+    //background-color: #222;
+    //box-shadow: 0 20px 15px -10px hsla(0,0%,0%,.25);
+    //display: block;
+    height: 150px;
+    flex-grow: 1;
+    //width: 100%;
+    //-webkit-transition: .5s;
 }
+
+
 figure:hover img {
     box-shadow: none;
 }
@@ -157,6 +174,30 @@ figure:hover figcaption {
 .go-back {
 }
 
+.section{
+    padding: 2px;
+    display: flex;
+    flex-wrap: wrap;
+    &::after {
+      content: '';
+      flex-grow: 999999999;
+    }
+  }
+
+  .imgdisplay{
+    margin: 2px;
+    position: relative;
+    height: 100px;
+    flex-grow: 1;
+    background-color: violet;
+    img {
+      max-width: 100%;
+      min-width: 100%;
+      height: 100px;
+      object-fit: cover;
+      vertical-align: bottom;
+    }}
+
 .username {
   font-weight: bold;
   font-size: 0.9rem;
@@ -165,15 +206,22 @@ figure:hover figcaption {
 }
 
 .cluster-container {
-  background-color: lightblue;
-  width: 40%;
-  text-align: center;
-  position: relative;
-  margin: auto;
+
+
+
+
+}
+
+.cluster-images{
+  font-size: 16px;
+  display: inline-block;
+  margin-bottom: 8px;
+  //width: calc(25% - 6px);
+  margin-right: 8px;
 }
 
 .cluster-keyword {
-  margin-top: -20px;
+  //margin-top: -20px;
 }
 
 .cluster-container {
