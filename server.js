@@ -10,7 +10,6 @@ var morgan      = require('morgan');
 var mongoose    = require('mongoose');
 var cors = require('cors');
 var multer = require('multer');
-var sharp = require('sharp');
 var fs = require('fs'),
     path = require('path'),
     url = require('url');
@@ -19,7 +18,7 @@ var imageDir = 'uploads/';
 // CHAT APP STUFF
 var chat_app = require('express')();
 var http = require('http').createServer(chat_app);
-var io = require( "socket.io" )( http );
+var io = require( 'socket.io' )( http );
 http.listen(5007);
 
 var jwt    = require('jsonwebtoken'); // used to create, sign, and verify tokens
@@ -32,6 +31,7 @@ var Clusters = require('./models/clusters');
 // =================================
 // CONFIGURATION
 // =================================
+mongoose.Promise = global.Promise;
 mongoose.connect(config.database); // connect to database
 app.set('superSecret', config.secret); // secret variable
 
@@ -138,16 +138,23 @@ app.get('/messages', function(req,res) {
 // IMAGE STORAGE FUNCTIONS ====
 var storage = multer.diskStorage({ //multers disk storage settings
         destination: function (req, file, cb) {
-            cb(null, '/uploads');
+            cb(null, '/home/ec2-user/resang_users/uploads/');
         },
         filename: function (req, file, cb) {
             // var datetimestamp = Date.now();
             // console.log(file);
-            console.log('Uploading... REQUEST.BODY');
-            console.log(req.body);
+            // console.log('Uploading... REQUEST.BODY');
+            // console.log(req.body);
+            // console.log(file);
             //cb(null, datetimestamp + '_' + file.originalname + '_' + req.body.userName + '.jpg');
             cb(null, req.body.fileName);
             //cb(null, String(req.body.fileName));
+        },
+        onFileUploadStart: function (file) {
+          console.log('Uploading file..........');
+        },
+        onFileUploadComplete: function (file, req, res) {
+            console.log("filename upload complete!");
         }
 });
 
@@ -187,14 +194,6 @@ app.get('/postimage', function (req, res) {
 // UPLOADING ENDPOINT
 app.post('/images', function(req,res) {
   var datetimestamp = Date.now();
-  sharp(req.body.file).resize(300, 200).toFile('./uploads/', function(err) {
-         if (err) {
-           throw err;
-         }
-         // output.jpg is a 300 pixels wide and 200 pixels high image
-         // containing a scaled and cropped version of input.jpg
-         console.log('resized!');
-      });
   upload(req,res, function(err){
       if(err){
           console.log(err);
