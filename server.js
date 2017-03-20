@@ -19,7 +19,7 @@ var imageDir = 'uploads/';
 var chat_app = require('express')();
 var http = require('http').createServer(chat_app);
 var io = require( 'socket.io' )( http );
-http.listen(5007);
+http.listen(9001);
 
 var jwt    = require('jsonwebtoken'); // used to create, sign, and verify tokens
 var config = require('./config'); // get our config file
@@ -138,7 +138,7 @@ app.get('/messages', function(req,res) {
 // IMAGE STORAGE FUNCTIONS ====
 var storage = multer.diskStorage({ //multers disk storage settings
         destination: function (req, file, cb) {
-            cb(null, '/home/ec2-user/resang_users/uploads/');
+            cb(null, '/root/Developer/resang_production/uploads/');
         },
         filename: function (req, file, cb) {
             // var datetimestamp = Date.now();

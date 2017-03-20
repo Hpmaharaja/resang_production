@@ -16,6 +16,8 @@ import datetime
 
 client = MongoClient('mongodb://hpmaharaja:Jaganath1@ds117869.mlab.com:17869/resang_users')
 db = client.resang_users
+IP_ADDR = '138.197.207.68'
+PORT_FRONTEND = '5600'
 
 '''
 def insert_images(images):
@@ -40,7 +42,6 @@ def get_EXIF(image):
     try:
         lat = tags['EXIF:GPSLatitude']
     except KeyError:
-        os.system(error_string)
         print('Skipping',path_name,'due to lack of GPSLatitude')
         return
     lat = lat.split()
@@ -60,7 +61,6 @@ def get_EXIF(image):
     try:
         longit = tags['EXIF:GPSLongitude']
     except KeyError:
-        os.system(error_string)
         print('Skipping',path_name,'due to lack of GPSLongitude')
         return
     longit = longit.split()
@@ -87,7 +87,6 @@ def get_EXIF(image):
         time = tags['EXIF:DateTimeOriginal']
         timestamp = ''.join(c for c in time if c.isdigit())
     except KeyError:
-        os.system(error_string)
         print('Skipping',path_name,'due to lack of EXIFTimestamp data')
         return
     PRIME_MERIDIAN_EQUATOR = (0,0)
@@ -109,7 +108,7 @@ def get_keyword(image):
     newlis=[]
     for i in range(len(keyword_list)):
         newlis.append(keyword_list[i].split('('))
-    top_keywords = newlis[0][0].strip()
+    top_keywords = newlis[0][0].strip() + ', ' 
     image['Keyword'] = top_keywords
     return image
 
@@ -139,11 +138,13 @@ def get_clusters():
 def get_unprocessed_images(db_or_csv):
     if (db_or_csv == 'db'):
         collection = db.images
-        cursor = db.images.find( {"processed":False} )
+        #cursor = db.images.find( {"processed":False} )
+        cursor = db.images.find( {} )
         images = [] 
         for document in cursor:
             image = {}
             image['FileName'] = document['localPath']
+            image['URL'] = document['pathTofile']
             images.append(image)
         return images
 
@@ -167,11 +168,15 @@ def format_cluster(cluster_with_id,ID):
     cluster_formatted['images'] = []
     keywords_set = set()
     for c in cluster_with_id:
-        cluster_formatted['images'].append(c['FileName'])
+        cluster_formatted['images'].append(c['URL'])
         keywords_set.add(c['Keyword'])
     cluster_formatted['keywords'] = list(keywords_set)
     print(cluster_formatted)
     return cluster_formatted
+
+
+def purge_clusters_db():
+    db.clusters.remove({})
     
 def create_agglomerative_clusters(images):
     Xf = np.zeros((len(images),3))
@@ -179,18 +184,21 @@ def create_agglomerative_clusters(images):
         Xf[i,0] = images[i]['Timestamp']
         Xf[i,1] = images[i]['Latitude']
         Xf[i,2] = images[i]['Longitude']
-    num_clusters = 5
+    #num_clusters = 2
+    num_clusters = int( len(images) / 5 )
     agglomerative = cluster.AgglomerativeClustering(
         linkage="complete", affinity=calc_affinity, n_clusters=num_clusters)
-    fit = agglomerative.fit(Xf)
+    #fit = agglomerative.fit(Xf)
     fit_predict = agglomerative.fit_predict(Xf)
     print(fit_predict)
-    max_id = get_largest_cluster_id()
+    #max_id = get_largest_cluster_id()
+    max_id = 2
     for i in range(len(fit_predict)): 
         cluster_id = fit_predict[i] + 1 + max_id
         images[i]['Cluster_id'] = cluster_id
     images = sorted(images, key=itemgetter('Cluster_id'))
     ID = -1
+    purge_clusters_db()
     for i in range(num_clusters):
         cluster_id = i + 1 + max_id
         temp_cluster = [image for image in images if image['Cluster_id'] == cluster_id]
@@ -204,22 +212,35 @@ def update_images_db(images):
     for image in images:
         document = collection.update( {"localPath":image['FileName']}, {"$set": {"processed":True} })
         
-    
 
 def main():
     images = get_unprocessed_images('db')
-    for i in range(len(images)):
-        image = images[i]
-        EXIF = get_EXIF(image)
-        images[i] = EXIF
-    images = [x for x in images if x != None]
-    for i in range(len(images)):
-        image = images[i]
-        images[i] = get_keyword(image)
-    create_agglomerative_clusters(images) 
-    update_images_db(images) 
+    if (images):
+        for i in range(len(images)):
+            image = images[i]
+            EXIF = get_EXIF(image)
+            images[i] = EXIF
+        images = [x for x in images if x != None]
+        if (images):
+            for i in range(len(images)):
+                image = images[i]
+                images[i] = get_keyword(image)
+                #images[i]['Keyword'] = ''
+            create_agglomerative_clusters(images) 
+            update_images_db(images) 
 
     
 
 if __name__ == "__main__": 
+    cursor = db.ml_running.find()
+    '''
+    try:
+        cursor[0]
+        print('running')
+    except IndexError:
+        db.ml_running.insert({"running":True})
+        print('inserted')
+        main()
+        db.ml_running.remove( {} )
+    '''
     main()
