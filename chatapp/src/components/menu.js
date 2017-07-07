@@ -58,7 +58,7 @@ export default class LeftSidebar extends React.Component {
 
     redirectSubmitHandler(event) {
           event.preventDefault();
-          window.location.href = 'http://localhost:8000';
+          window.location.href = config.frontend_home;
     };
 
     dashboardSubmitHandler(event) {

@@ -56,6 +56,7 @@ class DropzoneDemo extends React.Component {
           //       this.props.onDrop({ url: this.state.url, timestamp: this.state.timestamp, localPath: this.state.localPath, uploaded: true });
           //   }
           // });
+          this.props.onDrop({ url: this.state.url, timestamp: this.state.timestamp, localPath: this.state.localPath, uploaded: false });
       } 
           console.log('FIRST SUCCESS UPLOAD!');
           this.setState({
