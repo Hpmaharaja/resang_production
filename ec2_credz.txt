@@ -3,6 +3,12 @@ username: ec2-user
 password:
 
 
+ip-address: 138.197.207.68
+username:   root
+password:   R3$angM3
+
+ssh root@138.197.207.68
+
 COMMAND to ssh:
 
 ssh -i "pem_key" ec2-user@ec2-52-90-62-197.compute-1.amazonaws.com
